@@ -5,106 +5,93 @@ function doGet() {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-function getDatosConsolidados() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheetConsolidado = ss.getSheetByName("consolidado");
-  var sheetSolicitud = ss.getSheetByName("Solicitudes"); // Hoja 'Solicitudes'
-  
-  if (!sheetConsolidado) {
-    throw new Error("No se encontró la hoja 'consolidado'.");
+function getDataConsolidada() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaSolicitudes = ss.getSheetByName("Solicitudes");
+  const hojaItems = ss.getSheetByName("Ítems") || ss.getSheetByName("Items");
+
+  if (!hojaSolicitudes || !hojaItems) {
+    throw new Error("No se encontraron las hojas 'Solicitudes' e 'Ítems'. Verifique nombres.");
   }
 
-  // 1. Crear un mapa de Solicitante (Columna H = índice 7) indexado por el Código SR (Columna A = índice 0)
-  var mapaSolicitantes = {};
-  if (sheetSolicitud) {
-    var dataSolicitud = sheetSolicitud.getDataRange().getValues();
-    if (dataSolicitud.length > 1) {
-      for (var i = 1; i < dataSolicitud.length; i++) {
-        var cod = String(dataSolicitud[i][0]).trim(); // Columna A (Código SR)
-        var nom = String(dataSolicitud[i][7]).trim(); // Columna H (Solicitante)
-        if (cod) {
-          mapaSolicitantes[cod] = nom;
-        }
+  // Leer la última fecha de actualización guardada en la celda Z1
+  let fechaAct = hojaSolicitudes.getRange("Z1").getDisplayValue() || "";
+
+  const dataS = hojaSolicitudes.getDataRange().getValues();
+  const dataI = hojaItems.getDataRange().getValues();
+
+  let solicitudes = [];
+  let items = [];
+
+  // Convertidor universal de fechas a Timestamp
+  function parseFechaUniversal(val) {
+    if (!val) return null;
+    if (val instanceof Date) return isNaN(val.getTime()) ? null : val.getTime();
+    
+    // Si la fecha viene como Texto "DD/MM/YYYY" o "DD-MM-YYYY"
+    if (typeof val === 'string') {
+      let partes = val.trim().split(/[\/\-]/);
+      if (partes.length === 3) {
+        let dia = parseInt(partes[0], 10);
+        let mes = parseInt(partes[1], 10) - 1;
+        let anio = parseInt(partes[2], 10);
+        if (anio < 100) anio += 2000;
+        let d = new Date(anio, mes, dia);
+        if (!isNaN(d.getTime())) return d.getTime();
       }
     }
+    
+    let d = new Date(val);
+    return !isNaN(d.getTime()) ? d.getTime() : null;
   }
 
-  // 2. Leer la hoja 'consolidado'
-  var data = sheetConsolidado.getDataRange().getValues();
-  if (data.length <= 1) {
-    return { status: "empty", data: [], timestamp: "" };
-  }
+  // 1. LECTURA DE SOLICITUDES
+  for (let i = 1; i < dataS.length; i++) {
+    let id = dataS[i][0]; // Columna A
+    if (!id) continue;
 
-  var headers = data[0].map(function(h) { return String(h).toLowerCase().trim(); });
+    let centroRaw = String(dataS[i][3] || ""); // Columna D
+    let centro = "Sin Centro";
+    if (centroRaw.includes("Antofagasta")) centro = "Antofagasta";
+    else if (centroRaw.includes("Santiago")) centro = "Santiago";
+    else if (centroRaw.includes("Concepción") || centroRaw.includes("Concepcion")) centro = "Concepción";
 
-  var idxId = headers.indexOf("código sr");
-  if (idxId === -1) idxId = headers.indexOf("codigo sr");
-  
-  var idxProyecto = headers.indexOf("proyecto");
-  var idxTipo = headers.indexOf("tipo");
-  var idxClase = headers.indexOf("clase");
-  var idxCentro = headers.indexOf("centro");
-  var idxEstado = headers.indexOf("estado");
-  var idxFAprob = headers.indexOf("fecha aprobación");
-  var idxFTerm = headers.indexOf("fecha término");
-  var idxFEnt = headers.indexOf("fecha entrega");
-
-  var solicitudesMap = {};
-  var itemsList = [];
-
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    var idSR = idxId !== -1 ? String(row[idxId]).trim() : "";
-    if (!idSR) continue;
-
-    var fAprob = idxFAprob !== -1 ? parseFechaJS(row[idxFAprob]) : null;
-    var fTerm = idxFTerm !== -1 ? parseFechaJS(row[idxFTerm]) : null;
-    var fEnt = idxFEnt !== -1 ? parseFechaJS(row[idxFEnt]) : null;
-
-    if (!solicitudesMap[idSR]) {
-      // Cruza el nombre del solicitante extraído de la Columna H de 'Solicitudes'
-      var nombreSolicitante = mapaSolicitantes[idSR] || "";
-
-      solicitudesMap[idSR] = {
-        id: idSR,
-        proyecto: idxProyecto !== -1 ? String(row[idxProyecto]) : "",
-        solicitante: nombreSolicitante,
-        centro: idxCentro !== -1 ? String(row[idxCentro]) : "",
-        estado: idxEstado !== -1 ? String(row[idxEstado]) : "",
-        fechaAprob: fAprob ? fAprob.getTime() : null,
-        fechaTermino: fTerm ? fTerm.getTime() : null
-      };
-    }
-
-    itemsList.push({
-      idSR: idSR,
-      tipo: idxTipo !== -1 ? String(row[idxTipo]) : "",
-      clase: idxClase !== -1 ? String(row[idxClase]) : "",
-      centro: idxCentro !== -1 ? String(row[idxCentro]) : "",
-      estado: idxEstado !== -1 ? String(row[idxEstado]) : "",
-      fechaAprob: fAprob ? fAprob.getTime() : null,
-      fechaTermino: fTerm ? fTerm.getTime() : null,
-      fechaEntrega: fEnt ? fEnt.getTime() : null
+    solicitudes.push({
+      id: id,
+      tipo: String(dataS[i][1] || "N/A").trim(),        // Col B
+      clase: String(dataS[i][2] || "N/A").trim(),       // Col C
+      centro: centro,                                   // Col D
+      estado: String(dataS[i][4] || "").trim(),         // Col E
+      proyecto: dataS[i][5] || "N/A",                   // Col F
+      solicitante: String(dataS[i][7] || "-").trim(),   // Col H (Solicitante)
+      fechaSol: parseFechaUniversal(dataS[i][8]),       // Col I (Solicitud)
+      fechaAprob: parseFechaUniversal(dataS[i][9]),     // Col J (Aprobación)
+      fechaTermino: parseFechaUniversal(dataS[i][10])   // Col K (Término)
     });
   }
 
-  var timestamp = "";
-  try {
-    var valZ1 = sheetConsolidado.getRange("Z1").getValue();
-    if (valZ1) {
-      if (valZ1 instanceof Date) {
-        timestamp = Utilities.formatDate(valZ1, ss.getSpreadsheetTimeZone(), "dd-MM-yyyy HH:mm");
-      } else {
-        timestamp = String(valZ1);
-      }
-    }
-  } catch(e) {}
+  // 2. LECTURA DE ÍTEMS
+  for (let j = 1; j < dataI.length; j++) {
+    let idSol = dataI[j][1]; // Col B en Ítems
+    if (!idSol) continue;
 
+    items.push({
+      idSolicitud: idSol,
+      estadoItem: String(dataI[j][3] || "").trim(),          // Col D (Estado Ítem)
+      colK: String(dataI[j][10] || "").trim().toLowerCase(), // Col K (Condición "no")
+      fechaCotizacion: parseFechaUniversal(dataI[j][12]),    // Col M
+      fechaOC: parseFechaUniversal(dataI[j][13]),            // Col N
+      fechaSisRecep: parseFechaUniversal(dataI[j][19]),      // Col T
+      fechaIngRecep: parseFechaUniversal(dataI[j][20]),      // Col U
+      fechaSisEntrega: parseFechaUniversal(dataI[j][27])     // Col AB
+    });
+  }
+
+  // Retornar los datos junto con la variable fechaActualizacion
   return {
-    status: "success",
-    solicitudes: Object.values(solicitudesMap),
-    items: itemsList,
-    timestamp: timestamp
+    solicitudes: solicitudes,
+    items: items,
+    fechaActualizacion: fechaAct
   };
 }
 

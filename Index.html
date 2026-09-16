@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+
+  <!-- FUENTES Y LIBRERÍAS EXTERNAS (ESENCIALES PARA EL DISEÑO) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+  <style>
+    :root {
+      --cyd-red: #802528;
+      --cyd-red-dark: #631b1e;
+      --cyd-bg: #eef2f5;
+      --sidebar-width: 250px;
+    }
+
+    body {
+      background-color: var(--cyd-bg);
+      font-family: 'Roboto', 'Segoe UI', sans-serif;
+      margin: 0;
+      color: #333;
+    }
+
+    /* CABECERA SUPERIOR CON LOGO Y TÍTULO */
+    .cyd-header {
+      background: white;
+      padding: 12px 25px;
+      border-bottom: 2px solid var(--cyd-red);
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .cyd-logo-img {
+      height: 48px;
+      width: auto;
+    }
+
+    .header-title {
+      font-family: 'Roboto', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111;
+      margin: 0;
+    }
+
+    /* FILTROS LATERALES IZQUIERDA (ROJO CORPORATIVO) */
+    .sidebar-filters {
+      width: var(--sidebar-width);
+      position: fixed;
+      top: 70px;
+      left: 0;
+      bottom: 0;
+      background: var(--cyd-red);
+      color: white;
+      padding: 15px;
+      overflow-y: auto;
+      z-index: 900;
+      border-top: 1px solid var(--cyd-red-dark);
+    }
+
+    .filter-header-box {
+      background: var(--cyd-red-dark);
+      color: white;
+      padding: 8px 10px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .sidebar-filters label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 3px;
+      color: #ffffff;
+    }
+
+    /* CONTENEDOR PRINCIPAL DERECHA */
+    .main-wrapper {
+      margin-top: 70px;
+      margin-left: var(--sidebar-width);
+      padding: 20px;
+    }
+
+    /* ESTILO GENERAL DE PANELES */
+    .card-panel {
+      background: white;
+      border-radius: 6px;
+      padding: 12px 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      height: 100%;
+      border-top: 3px solid var(--cyd-red);
+    }
+
+    /* TARJETAS KPI SUPERIORES UNIFICADAS */
+    .kpi-card-unified {
+      background: white;
+      border: 1px solid #dcdcdc;
+      border-radius: 6px;
+      border-top: 3px solid var(--cyd-red);
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      height: 75px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+
+    .kpi-icon-box {
+      width: 55px;
+      height: 100%;
+      background-color: var(--cyd-red);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .kpi-body {
+      padding: 8px 12px;
+    }
+
+    .kpi-title-sub {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .kpi-val-num {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #111;
+      line-height: 1.1;
+    }
+
+    /* ESTILOS DE TABLAS CORPORATIVAS */
+    .table-cyd th {
+      background-color: var(--cyd-red) !important;
+      color: white !important;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 6px;
+      text-align: center;
+    }
+
+    .table-cyd td {
+      font-size: 0.8rem;
+      padding: 5px 8px;
+    }
+
+    .table-cyd .tr-total td {
+      background-color: #222 !important;
+      color: white !important;
+      font-weight: bold;
+    }
+
+    .badge-estado {
+      padding: 4px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 12px;
+    }
+
+    .badge-revision { background-color: #ffc107; color: #000; }
+    .badge-proveedor { background-color: #fd7e14; color: #fff; }
+    .badge-cotizacion { background-color: #ffc107; color: #000; }
+  </style>
+</head>
+<body>
+
+ <div class="cyd-header">
+    <svg class="cyd-logo-img" viewBox="0 0 437.2 317.9" xmlns="http://www.w3.org/2000/svg">
+      <style>
+        .st0 { fill: #76787A; }
+        .st1 { fill: #802528; }
+      </style>
+      <g>
+        <path class="st0" d="M80.8,290.4h-0.5c-1.1,0-2,0.9-2,2v24.1c0,1.1,0.9,2,2,2h0.5c1.1,0,2-0.9,2-2v-24.1C82.7,291.2,81.8,290.4,80.8,290.4z"/>
+        <path class="st0" d="M123.2,316.6v-24.3c0-1.1-0.9-2-2-2h-0.5c-1.1,0-2,0.9-2,2V314c-0.1-0.1-0.1-0.2-0.1-0.2c0-0.1-0.1-0.1-0.1-0.2c-0.2-0.4-0.3-0.6-0.4-0.8c-0.1-0.1-0.1-0.3-0.2-0.5c-0.1-0.1-0.2-0.2-0.2-0.4c-0.1-0.1-0.2-0.2-0.2-0.3l-16.9-20.6c-0.4-0.5-0.9-0.7-1.5-0.7h-2.8c-1.1,0-2,0.9-2,2v24.1c0,1.1,0.9,2,2,2h0.5c1.1,0,2-0.9,2-2v-22.3c0.1,0.3,0.2,0.5,0.3,0.6c0.1,0.1,0.2,0.3,0.3,0.4c0,0.1,0.1,0.2,0.2,0.3c0.1,0.1,0.2,0.2,0.3,0.4c0.1,0.2,0.3,0.4,0.4,0.6c0.1,0.2,0.2,0.3,0.3,0.4l17.2,21.1c0.4,0.5,0.9,0.7,1.5,0.7h2.2C122.3,318.6,123.2,317.7,123.2,316.6z"/>
+        <path class="st0" d="M161.9,317.3v-9.5c0-1.1-0.9-2-2-2h-0.5c-1.1,0-2,0.9-2,2v7.4c-1.4,0.2-2.5,0.4-3.3,0.5c-0.8,0.1-1.7,0.1-2.5,0.1c-4.5-0.1-8.1-1.2-11-3.3c-2.8-2.1-4.3-4.9-4.4-8.4c0-1.4,0.3-2.7,0.9-4c0.6-1.3,1.5-2.4,2.6-3.5c1.3-1.2,2.9-2.2,4.6-2.7c1.7-0.6,3.8-0.9,6.3-0.8c1.4,0,2.8,0.1,4.1,0.3c1.3,0.2,2.5,0.5,3.5,0.8c0.2,0.1,0.5,0.2,0.8,0.3c0.3,0.1,0.7,0.3,1.1,0.5l1.7-2.9c-0.9-0.4-1.7-0.7-2.3-0.9c-0.6-0.2-1.3-0.4-2-0.5c-1-0.2-2.1-0.4-3.4-0.5c-1.3-0.1-2.6-0.2-3.9-0.2c-3.6,0-6.8,0.7-9.6,1.9c-2.8,1.2-5,2.9-6.6,5.1c-1.6,2.2-2.4,4.6-2.4,7.4c0,2.8,0.9,5.3,2.5,7.4c1.6,2.2,3.9,3.9,6.7,5.2c2.8,1.3,6,1.9,9.6,1.9c1.5,0,3-0.1,4.6-0.2c1.6-0.2,3-0.4,4.2-0.7C159.9,317.8,160.7,317.6,161.9,317.3"/>
+        <path class="st0" d="M192.9,318.3v-2.9h-13.9c-1.1,0-2-0.9-2-2v-6c0-1.1,0.9-2,2-2h10.8v-2.9h-10.8c-1.1,0-2-0.9-2-2v-5.4c0-1.1,0.9-2,2-2h13.5v-2.9h-17.8c-1.1,0-2,0.9-2,2v24.1c0,1.1,0.9,2,2,2H192.9z"/>
+        <path class="st0" d="M230.2,316.6v-24.3c0-1.1-0.9-2-2-2h-0.5c-1.1,0-2,0.9-2,2V314c-0.1-0.1-0.1-0.2-0.1-0.2c0-0.1-0.1-0.1-0.1-0.2c-0.2-0.4-0.3-0.6-0.4-0.8c-0.1-0.1-0.2-0.3-0.2-0.5c-0.1-0.1-0.2-0.2-0.2-0.4c-0.1-0.1-0.2-0.2-0.2-0.3l-16.9-20.6c-0.4-0.5-0.9-0.7-1.5-0.7h-2.8c-1.1,0-2,0.9-2,2v24.1c0,1.1,0.9,2,2,2h0.5c1.1,0,2-0.9,2-2v-22.3c0.1,0.3,0.2,0.5,0.3,0.6c0.1,0.1,0.2,0.3,0.3,0.4c0,0.1,0.1,0.2,0.2,0.3c0.1,0.1,0.2,0.2,0.3,0.4c0.1,0.2,0.3,0.4,0.4,0.6c0.1,0.2,0.2,0.3,0.3,0.4l17.2,21.1c0.4,0.5,0.9,0.7,1.5,0.7h2.2C229.3,318.6,230.2,317.7,230.2,316.6z"/>
+        <path class="st0" d="M244.3,290.4h-0.5c-1.1,0-2,0.9-2,2v24.1c0,1.1,0.9,2,2,2h0.5c1.1,0,2-0.9,2-2v-24.1C246.2,291.2,245.3,290.4,244.3,290.4z"/>
+        <path class="st0" d="M278.1,318.3v-2.9h-13.9c-1.1,0-2-0.9-2-2v-6c0-1.1,0.9-2,2-2H275v-2.9h-10.8c-1.1,0-2-0.9-2-2v-5.4c0-1.1,0.9-2,2-2h13.5v-2.9h-17.8c-1.1,0-2,0.9-2,2v24.1c0,1.1,0.9,2,2,2H278.1z"/>
+        <path class="st0" d="M310.4,318.3L300,305.8c1.3-0.2,2.3-0.5,3.1-0.8c0.8-0.3,1.5-0.8,2.2-1.3c1-0.8,1.8-1.6,2.3-2.6c0.5-1,0.8-2.1,0.8-3.2c0-1.1-0.3-2.1-0.7-3c-0.5-0.9-1.2-1.8-2-2.4c-1-0.8-2.1-1.3-3.3-1.6c-1.2-0.3-2.9-0.5-5-0.4h-8.8c-1.1,0-2,0.9-2,2v24.1c0,1.1,0.9,2,2,2h0.5c1.1,0,2-0.9,2-2v-8.1c0-1.1,0.9-2,2-2h1.8c0.6,0,1.1,0.3,1.5,0.7l8.5,10.5c0.4,0.5,0.9,0.7,1.5,0.7H310.4z M303.8,297.9c0,1.8-0.6,3.2-1.8,4.1c-1.2,0.9-2.9,1.4-5.3,1.4H293c-1.1,0-2-0.9-2-2v-6.2c0-1.1,0.9-2,2-2h3.8c1.5,0,2.6,0,3.3,0.2c0.7,0.1,1.3,0.3,1.8,0.7C303.1,294.9,303.8,296.2,303.8,297.9"/>
+        <path class="st0" d="M320.2,290.4h-0.5c-1.1,0-2,0.9-2,2v24.1c0,1.1,0.9,2,2,2h0.5c1.1,0,2-0.9,2-2v-24.1C322.1,291.2,321.2,290.4,320.2,290.4z"/>
+        <path class="st0" d="M359.3,318.3l-12.5-27.6c-0.3-0.7-1-1.1-1.8-1.1h-2.2c-0.8,0-1.5,0.4-1.8,1.1l-12.6,27.6h3.4c0.8,0,1.5-0.5,1.8-1.2l2.6-5.9c0.3-0.7,1-1.2,1.8-1.2h11.7c0.8,0,1.5,0.5,1.8,1.2l2.6,5.9c0.3,0.7,1,1.2,1.8,1.2H359.3z M346.5,306.9h-5.4c-1.4,0-2.4-1.5-1.8-2.8l2.7-6.1c0.7-1.5,2.9-1.5,3.6,0l2.7,6.1C348.9,305.4,348,306.9,346.5,306.9z"/>
+        <path class="st0" d="M10.4,275c0,0,114.7-18.8,204.4-18.8c89.8,0,213.1,19,213.1,19s-149.8-10.4-213.7-10.4C150.3,264.8,10.4,275,10.4,275"/>
+        <path class="st1" d="M133.5,5.5c5.1,1.9,13.7,5.8,17.7,5.9c5.4,0.2,8.8-4.7,10.1-9.6c0.2-0.8,1-1.4,1.9-1.4l8.7,0c1.1,0,1.9,0.9,1.9,2l-0.1,65.1c0,1.1-0.9,1.9-1.9,1.9c-1.7,0-4.3,0-5.7,0c-0.7,0-1.4-0.4-1.7-1.1c-12.4-26-30.9-52.7-69.9-47.8c-38,4.8-44.6,47.9-44.7,78.2c0,20,0.9,43.3,11.9,60.4c13.2,20.7,39.7,22.6,62.8,16c2.6-0.7,5.1-1.6,7.6-2.7c14.1-5.9,26.2-13.6,36.5-24.7c0.8-0.9,2.3-0.8,3,0.1c2,2.7,4,5.4,6,8.1c0.5,0.7,0.5,1.8-0.1,2.4c-19.8,23.2-45.8,39.9-77.1,39.9c-27.6,0-50.7-8.3-69.4-24.7C10.3,155.4,0,131,0,100.3c0-30.4,10-55.1,29.8-73.9C48.4,8.8,71.2,0,98.1,0C109.8,0,121.6,1.1,133.5,5.5"/>
+        <path class="st1" d="M411.3,29.3c-19-19.3-46.5-28.9-82.6-28.9h-87.6c-1.1,0-2,0.9-2,2v15c0,1,0.8,1.9,1.9,2c5.3,0.1,10.8-0.9,15.6,1.6c5.1,2.7,7,8.1,7,13.7v133.6c0,7.8-2.9,13.2-8.6,16.2c-3,1.5-7.7,2.5-14.1,3c-1,0.1-1.8,0.9-1.8,1.9v7.1c0,1.1,0.9,2,2,2h90.6c33.5,0,60-10.3,79.5-31c17.3-18.4,26-40.8,26-67.3C437.2,70.4,428.6,46.8,411.3,29.3 M387.7,114.1c-1,8.4-3.2,16.6-6.7,24.3c-10.5,22.8-31.5,39.3-57.2,39.3h-17.6c-3.9,0-7.1-3.2-7.1-7.1v-135c0-3.9,3.2-7.1,7.1-7.1h17.6C369.1,28.5,392.4,74.1,387.7,114.1"/>
+        <path class="st1" d="M224.4,125v0.2c0,1,0.8,1.9,1.8,1.9c2.2,0.1,3.9,0.5,5.1,0.9c1.5,0.6,2.3,2.1,2.3,4.4c0,0.9-0.2,2-0.5,3.2c-0.4,1.2-0.8,2.6-1.3,4.3l-10.9,29.2H220l-13.2-32.7c-0.6-1.7-1.1-2.8-1.3-3.5c-0.2-0.6-0.3-1.2-0.3-1.5c0-1.8,0.8-3,2.5-3.5c1.2-0.4,2.7-0.7,4.5-0.8c1-0.1,1.9-0.9,1.9-1.9V125c0-1.1-0.9-2-2-2h-38c-1.1,0-2,0.9-2,2v0.3c0,1,0.7,1.8,1.6,1.9c1.5,0.3,2.8,0.7,3.4,1.2c0.9,0.8,2.1,2.6,3.6,5.5c1.5,2.9,2.9,5.8,4.2,8.9c1.3,3,2.7,6.3,4.1,9.8l19.4,48c0.2,0.4,0.2,0.9,0,1.4c-1.2,3.2-2.3,6.5-3.6,9.6c-1.3,3.1-2.6,6.9-5,9.3c-2.7,2.7-6.7,3.3-10.4,3.1c-2.9-0.1-5.7-1.2-8.4-2c-0.2,0-0.3-0.1-0.5-0.2c-0.6-0.2-1.2,0.3-1.2,0.9c0.1,2.6,0.1,5.8,0.6,8.4c0.7,3.2,6.3,2.9,8.7,2.8c4.6-0.3,8.7-2.3,12.1-5.3c4.1-3.6,6.5-8.4,8.7-13.3c2-4.3,3.9-8.6,5.6-13L240,136c1.5-3.8,2.9-6.3,4.3-7.3c1-0.8,2.3-1.3,3.8-1.5c0.9-0.2,1.6-1,1.6-1.9V125c0-1.1-0.9-2-2-2h-21.3C225.3,123,224.4,123.9,224.4,125z"/>
+      </g>
+    </svg>
+    <h2 class="header-title">Panel de Control de Solicitudes (SDA)</h2>
+  </div>
+
+<!-- FILTROS LATERALES -->
+<div class="sidebar-filters d-flex flex-column justify-content-between">
+  <div>
+    <div class="filter-header-box">
+      <i class="bi bi-funnel-fill"></i> FILTROS
+    </div>
+
+    <div class="mb-2">
+      <label>Fecha Desde</label>
+      <input type="date" id="filtroDesde" class="form-control form-control-sm" onchange="aplicarFiltros()">
+    </div>
+
+    <div class="mb-2">
+      <label>Fecha Hasta</label>
+      <input type="date" id="filtroHasta" class="form-control form-control-sm" onchange="aplicarFiltros()">
+    </div>
+
+    <div class="mb-2">
+      <label>Tipo <span class="text-white-50">(Ctrl / Cmd para varios)</span></label>
+      <select id="filtroTipo" class="form-select form-select-sm" multiple size="4" onchange="aplicarFiltros()">
+        <option value="TODOS" selected>Todos los Tipos</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label>Centro</label>
+      <select id="filtroCentro" class="form-select form-select-sm" onchange="aplicarFiltros()">
+        <option value="TODOS">Todos los Centros</option>
+        <option value="Antofagasta">Antofagasta</option>
+        <option value="Santiago">Santiago</option>
+        <option value="Concepción">Concepción</option>
+      </select>
+    </div>
+
+    <button class="btn btn-sm btn-outline-light w-100" onclick="limpiarFiltros()">
+      <i class="bi bi-arrow-counterclockwise"></i> Limpiar Filtros
+    </button>
+  </div>
+
+  <!-- ETIQUETA EN LA PARTE INFERIOR IZQUIERDA -->
+  <div class="pt-3 mt-4 border-top text-white-50" style="font-size: 0.70rem; border-color: rgba(255,255,255,0.2) !important;">
+    <i class="bi bi-clock-history me-1"></i> Última actualización:<br>
+    <span id="lblUltimaActualizacion" class="fw-bold text-white fs-6">-</span>
+    <div class="mt-2 fst-italic opacity-75" style="font-size: 0.65rem;">
+      * Muestra los últimos 6 meses.
+    </div>
+  </div>
+</div>
+
+<!-- PANEL PRINCIPAL (DERECHA) -->
+<div class="main-wrapper">
+
+  <!-- FILA 1: KPIs SUPERIORES -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="kpi-card-unified">
+        <div class="kpi-icon-box">
+          <i class="bi bi-clock"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-title-sub">Nuevas (< 24 hrs)</div>
+          <div class="kpi-val-num" id="kpiNuevas">0</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="kpi-card-unified">
+        <div class="kpi-icon-box">
+          <i class="bi bi-gear"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-title-sub">En Proceso</div>
+          <div class="kpi-val-num" id="kpiProceso">0</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="kpi-card-unified">
+        <div class="kpi-icon-box">
+          <i class="bi bi-speedometer2"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-title-sub">Tiempo Abastecimiento</div>
+          <div class="kpi-val-num" id="kpiAbastecimiento">0 d</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILA 2: TABLA DE ESTADOS POR CENTRO -->
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <div class="card-panel">
+        <h6 class="fw-bold mb-2">Cantidad de Solicitudes por Estado y Centro</h6>
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm table-cyd align-middle m-0">
+            <thead>
+              <tr>
+                <th style="text-align: left;">Estado</th>
+                <th>Antofagasta</th>
+                <th>Santiago</th>
+                <th>Concepción</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="cuerpoTablaMatriz"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILA 3: TIEMPOS DE GESTIÓN SECUNDARIOS -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="card-panel">
+        <div class="kpi-title-sub">Tiempo Equipo Compra</div>
+        <div class="kpi-val-num" id="kpiTiempoEquipo">0 d</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-panel">
+        <div class="kpi-title-sub">Tiempo de Proveedor</div>
+        <div class="kpi-val-num" id="kpiTiempoProveedor">0 d</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-panel">
+        <div class="kpi-title-sub">Tiempo Entrega</div>
+        <div class="kpi-val-num" id="kpiTiempoEntrega">0 d</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILA 4: TOP 10 SOLICITUDES ABIERTAS -->
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="card-panel">
+        <h6 class="fw-bold text-danger mb-2">
+          <i class="bi bi-exclamation-triangle-fill"></i> Top 10 Solicitudes con más Tiempo Abiertas
+        </h6>
+        <div class="table-responsive">
+          <table class="table table-hover table-sm align-middle small">
+            <thead class="table-light">
+              <tr>
+                <th>Código SR</th>
+                <th>Proyecto</th>
+                <th>Tipo</th>
+                <th>Clase</th>
+                <th>Centro</th>
+                <th>Estado</th>
+                <th>Fecha Aprobación</th>
+                <th>Días Abierta</th>
+              </tr>
+            </thead>
+            <tbody id="cuerpoTop10"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+  <script>
+    let rawSolicitudes = [];
+    let rawItems = [];
+
+    const ORDEN_ESTADOS = [
+      "Espera aprobación 1",
+      "Espera aprobación 2",
+      "Revisión stock Santiago",
+      "Revisión stock centro seleccionado",
+      "Cotización",
+      "Pendiente entrega proveedor",
+      "Preparar recurso",
+      "Listo para entregar",
+      "En traslado",
+      "Rechazada",
+      "Entregado"
+    ];
+
+    const ESTADOS_PROCESO = [
+      "Cotización",
+      "Revisión stock Santiago",
+      "Revisión stock centro seleccionado",
+      "Pendiente entrega proveedor",
+      "Preparar recurso",
+      "Listo para entregar",
+      "En traslado"
+    ];
+
+    window.onload = () => {
+      google.script.run
+        .withSuccessHandler(inicializar)
+        .withFailureHandler(err => console.error("Error backend:", err))
+        .getDataConsolidada();
+    };
+
+    function inicializar(res) {
+      rawSolicitudes = res.solicitudes || [];
+      rawItems = res.items || [];
+
+      // 1. Mostrar la fecha y hora de la última actualización (desde la celda Z1 o propiedad del backend)
+      if (res && res.fechaActualizacion) {
+        document.getElementById('lblUltimaActualizacion').innerText = res.fechaActualizacion;
+      } else {
+        // Respaldo en caso de no venir la celda Z1 cargada
+        let fechasSol = rawSolicitudes.map(s => s.fechaSol).filter(Boolean);
+        if (fechasSol.length > 0) {
+          let maxFechaMs = Math.max(...fechasSol);
+          let maxFechaObj = new Date(maxFechaMs);
+          document.getElementById('lblUltimaActualizacion').innerText = maxFechaObj.toLocaleDateString('es-CL', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
+        }
+      }
+
+      poblarDesplegableTipos();
+      aplicarFiltros();
+    }
+
+    function poblarDesplegableTipos() {
+      let tiposUnicos = [...new Set(rawSolicitudes.map(s => s.tipo))].filter(Boolean).sort();
+      let select = document.getElementById('filtroTipo');
+      select.innerHTML = '<option value="TODOS" selected>Todos los Tipos</option>';
+      tiposUnicos.forEach(t => {
+        select.innerHTML += `<option value="${t}">${t}</option>`;
+      });
+    }
+
+    function aplicarFiltros() {
+      const valDesde = document.getElementById('filtroDesde').value;
+      const valHasta = document.getElementById('filtroHasta').value;
+
+      const fDesde = valDesde ? new Date(valDesde + 'T00:00:00').getTime() : null;
+      const fHasta = valHasta ? new Date(valHasta + 'T23:59:59').getTime() : null;
+      
+      const selectTipo = document.getElementById('filtroTipo');
+      const tiposSeleccionados = Array.from(selectTipo.selectedOptions).map(opt => opt.value);
+      const fCentro = document.getElementById('filtroCentro').value;
+
+      let solFiltradas = rawSolicitudes.filter(s => {
+        let fechaParaFiltro = s.fechaAprob || s.fechaSol;
+
+        let cumDesde = !fDesde || (fechaParaFiltro && fechaParaFiltro >= fDesde);
+        let cumHasta = !fHasta || (fechaParaFiltro && fechaParaFiltro <= fHasta);
+        let cumTipo = tiposSeleccionados.includes('TODOS') || tiposSeleccionados.length === 0 || tiposSeleccionados.includes(s.tipo);
+        let cumCentro = fCentro === 'TODOS' || s.centro === fCentro;
+
+        return cumDesde && cumHasta && cumTipo && cumCentro;
+      });
+
+      let idsSolFiltradas = new Set(solFiltradas.map(s => s.id));
+      let itemsFiltrados = rawItems.filter(i => idsSolFiltradas.has(i.idSolicitud));
+
+      renderKPIsSuperiores(solFiltradas);
+      renderTablaMatriz(solFiltradas);
+      renderKPIsTiempos(solFiltradas, itemsFiltrados);
+      renderTop10(solFiltradas);
+    }
+
+    function renderKPIsSuperiores(solicitudes) {
+      const ahora = new Date().getTime();
+      const hace24hs = ahora - (24 * 60 * 60 * 1000);
+
+      let nuevas = solicitudes.filter(s => s.fechaAprob && s.fechaAprob >= hace24hs).length;
+      let enProceso = solicitudes.filter(s => ESTADOS_PROCESO.includes(s.estado)).length;
+
+      let sumaDias = 0, conteo = 0;
+      solicitudes.forEach(s => {
+        if (s.fechaAprob) {
+          let fin = s.fechaTermino ? s.fechaTermino : ahora;
+          sumaDias += Math.max(0, (fin - s.fechaAprob) / (1000 * 60 * 60 * 24));
+          conteo++;
+        }
+      });
+      let promAbast = conteo > 0 ? (sumaDias / conteo).toFixed(1) : 0;
+
+      document.getElementById('kpiNuevas').innerText = nuevas;
+      document.getElementById('kpiProceso').innerText = enProceso;
+      document.getElementById('kpiAbastecimiento').innerText = promAbast + ' d';
+    }
+
+    function renderTablaMatriz(solicitudes) {
+      let matriz = {};
+      ORDEN_ESTADOS.forEach(e => {
+        matriz[e] = { Antofagasta: 0, Santiago: 0, Concepción: 0 };
+      });
+
+      solicitudes.forEach(s => {
+        if (matriz[s.estado] && matriz[s.estado][s.centro] !== undefined) {
+          matriz[s.estado][s.centro]++;
+        }
+      });
+
+      let html = '';
+      let totAnt = 0, totSan = 0, totCon = 0, totGral = 0;
+
+      ORDEN_ESTADOS.forEach(e => {
+        let ant = matriz[e].Antofagasta;
+        let san = matriz[e].Santiago;
+        let con = matriz[e].Concepción;
+        let totalFila = ant + san + con;
+
+        totAnt += ant; totSan += san; totCon += con; totGral += totalFila;
+
+        html += `<tr>
+          <td style="text-align: left;">${e}</td>
+          <td class="text-center">${ant}</td>
+          <td class="text-center">${san}</td>
+          <td class="text-center">${con}</td>
+          <td class="text-center fw-bold bg-light">${totalFila}</td>
+        </tr>`;
+      });
+
+      html += `<tr class="tr-total">
+        <td style="text-align: left;">Total</td>
+        <td class="text-center">${totAnt}</td>
+        <td class="text-center">${totSan}</td>
+        <td class="text-center">${totCon}</td>
+        <td class="text-center">${totGral}</td>
+      </tr>`;
+
+      document.getElementById('cuerpoTablaMatriz').innerHTML = html;
+    }
+
+    function renderKPIsTiempos(solicitudes, items) {
+      const ahora = new Date().getTime();
+      let mapSol = {};
+      solicitudes.forEach(s => mapSol[s.id] = s);
+
+      let sumaEquipo = 0, countEquipo = 0;
+      items.forEach(i => {
+        let s = mapSol[i.idSolicitud];
+        if (s && s.fechaAprob && s.estado !== "Rechazada" && i.colK === "no") {
+          let fin = i.fechaCotizacion ? i.fechaCotizacion : ahora;
+          sumaEquipo += Math.max(0, (fin - s.fechaAprob) / (1000 * 60 * 60 * 24));
+          countEquipo++;
+        }
+      });
+
+      let sumaProv = 0, countProv = 0;
+      items.forEach(i => {
+        if (i.fechaOC && i.fechaIngRecep) {
+          sumaProv += Math.max(0, (i.fechaIngRecep - i.fechaOC) / (1000 * 60 * 60 * 24));
+          countProv++;
+        }
+      });
+
+      let sumaEntrega = 0, countEntrega = 0;
+      items.forEach(i => {
+        if (i.fechaSisRecep && i.fechaSisEntrega) {
+          sumaEntrega += Math.max(0, (i.fechaSisEntrega - i.fechaSisRecep) / (1000 * 60 * 60 * 24));
+          countEntrega++;
+        }
+      });
+
+      document.getElementById('kpiTiempoEquipo').innerText = (countEquipo > 0 ? (sumaEquipo / countEquipo).toFixed(1) : 0) + ' d';
+      document.getElementById('kpiTiempoProveedor').innerText = (countProv > 0 ? (sumaProv / countProv).toFixed(1) : 0) + ' d';
+      document.getElementById('kpiTiempoEntrega').innerText = (countEntrega > 0 ? (sumaEntrega / countEntrega).toFixed(1) : 0) + ' d';
+    }
+
+    function renderTop10(solicitudes) {
+      const ahora = new Date().getTime();
+
+      let abiertas = solicitudes.filter(s => s.fechaAprob && !s.fechaTermino && s.estado !== 'Rechazada');
+      abiertas.sort((a, b) => (ahora - b.fechaAprob) - (ahora - a.fechaAprob));
+
+      let top10 = abiertas.slice(0, 10);
+      let html = '';
+
+      top10.forEach(s => {
+        let dias = Math.floor((ahora - s.fechaAprob) / (1000 * 60 * 60 * 24));
+        let fAprobStr = new Date(s.fechaAprob).toLocaleDateString('es-CL');
+
+        let badgeClass = "badge-revision";
+        if (s.estado.includes("proveedor")) badgeClass = "badge-proveedor";
+        else if (s.estado.includes("Cotización")) badgeClass = "badge-cotizacion";
+
+        html += `<tr>
+          <td class="fw-bold">${s.id}</td>
+          <td>${s.proyecto}</td>
+          <td>${s.tipo}</td>
+          <td>${s.clase}</td>
+          <td>${s.centro}</td>
+          <td><span class="badge-estado ${badgeClass}">${s.estado}</span></td>
+          <td>${fAprobStr}</td>
+          <td class="fw-bold text-danger">${dias} días</td>
+        </tr>`;
+      });
+
+      document.getElementById('cuerpoTop10').innerHTML = html;
+    }
+
+    function limpiarFiltros() {
+      document.getElementById('filtroDesde').value = '';
+      document.getElementById('filtroHasta').value = '';
+      
+      const selectTipo = document.getElementById('filtroTipo');
+      Array.from(selectTipo.options).forEach(opt => {
+        opt.selected = (opt.value === 'TODOS');
+      });
+
+      document.getElementById('filtroCentro').value = 'TODOS';
+      aplicarFiltros();
+    }
+  </script>
+</body>
+</html>

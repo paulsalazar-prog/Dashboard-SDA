@@ -362,7 +362,7 @@
             <tr>
               <th>Código SR</th>
               <th>Proyecto</th>
-              <th>Tipo</th>
+              <th>Solicitante</th>
               <th>Clase</th>
               <th>Centro</th>
               <th>Estado</th>
@@ -583,7 +583,7 @@
     function renderTop10(solicitudes) {
   const ahora = new Date().getTime();
 
-  // 1. Filtrar SOLO las solicitudes que estén en los estados de proceso requeridos y que tengan fecha de aprobación
+  // 1. Filtrar SOLO las solicitudes que estén en los estados de proceso requeridos
   let abiertas = solicitudes.filter(s => 
     s.fechaAprob && 
     !s.fechaTermino && 
@@ -611,7 +611,7 @@
       html += `<tr>
         <td class="fw-bold">${s.id}</td>
         <td>${s.proyecto}</td>
-        <td>${s.tipo}</td>
+        <td>${s.solicitante || '-'}</td>
         <td>${s.clase}</td>
         <td>${s.centro}</td>
         <td><span class="badge-estado ${badgeClass}">${s.estado}</span></td>

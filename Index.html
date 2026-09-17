@@ -197,8 +197,7 @@
   <p class="text-muted small">Por favor espera un momento mientras procesamos la información.</p>
 </div>
  <div class="cyd-header">
-  <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 100' width='120' height='40'><style>.st0{fill:%2376787A;}.st1{fill:%23802528;}</style><g><path class='st0' d='M80.8,290.4h-0.5c-1.1,0-2,0.9-2,2v24.1c0,1.1,0.9,2,2,2h0.5c1.1,0,2-0.9,2-2v-24.1C82.8,291.3,81.9,290.4,80.8,290.4z'/><path class='st1' d='M123.2,316.6v-24.3c0-1.1-0.9-2-2-2h-0.5c-1.1,0-2,0.9-2,2v24.3c0,1.1,0.9,2,2,2h0.5C122.3,318.6,123.2,317.7,123.2,316.6z'/></g></svg>" alt="Logo CyD" style="height: 40px; width: auto;" />
-  <h2 class="header-title">Panel de Control de Solicitudes (SDA)</h2>
+  <h2 class="header-title m-0">Panel de Control de Solicitudes (SDA)</h2>
 </div>
 <!-- FILTROS LATERALES -->
 <div class="sidebar-filters d-flex flex-column justify-content-between">
@@ -415,41 +414,30 @@
 
    // Carga inicial segura con deshabilitación garantizada del Loader
 window.onload = () => {
-  // 1. Carga segura de datos principales
   google.script.run
     .withSuccessHandler(function(res) {
-      try {
-        if (res) {
-          rawSolicitudes = res.solicitudes || [];
-          rawItems = res.items || [];
-
-          // Ejecutar filtros solo si existen datos válidos
-          if (typeof aplicarFiltros === 'function') {
-            aplicarFiltros();
-          }
+      if (res) {
+        rawSolicitudes = res.solicitudes || [];
+        rawItems = res.items || [];
+        
+        if (typeof aplicarFiltros === 'function') {
+          aplicarFiltros();
         }
-      } catch (err) {
-        console.error("Error procesando solicitudes/ítems:", err);
-      } finally {
-        // Garantiza SIEMPRE que el loader desaparezca
-        ocultarLoader();
       }
+      ocultarLoader();
     })
     .withFailureHandler(function(err) {
-      console.error("Error de conexión con el backend:", err);
+      console.error("Error al cargar datos:", err);
       ocultarLoader();
     })
     .getDataConsolidada();
-
-  // 2. Carga asíncrona del histórico sin bloquear la pantalla
-  cargarHistoricoAsync();
 };
 
 function ocultarLoader() {
   let loader = document.getElementById('loaderOverlay');
   if (loader) {
     loader.style.opacity = '0';
-    setTimeout(() => { loader.style.display = 'none'; }, 400);
+    setTimeout(() => { loader.style.display = 'none'; }, 300);
   }
 }
 
@@ -589,7 +577,7 @@ function cargarHistoricoAsync() {
   renderTablaMatriz(solFiltradas);
   renderKPIsTiempos(solFiltradas, itemsFiltrados);
   renderTop10(solFiltradas);
-  / Actualizar tambiEn la curva histOrica al aplicar cualquier filtro
+  // Actualizar tambiEn la curva histOrica al aplicar cualquier filtro
   actualizarGraficoHistorico();
 }
 

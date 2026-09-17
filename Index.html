@@ -10,7 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
+  <!-- Librería Chart.js para gráficos de tendencia -->
+   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --cyd-red: #802528;
@@ -187,7 +188,14 @@
   </style>
 </head>
 <body>
-
+<!-- Pantalla de Carga (Overlay) -->
+<div id="loaderOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(255, 255, 255, 0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.4s ease;">
+  <div class="spinner-border text-danger" role="status" style="width: 3.5rem; height: 3.5rem;">
+    <span class="visually-hidden">Cargando...</span>
+  </div>
+  <h5 class="mt-3 text-dark fw-bold">Cargando datos del Dashboard...</h5>
+  <p class="text-muted small">Por favor espera un momento mientras procesamos la información.</p>
+</div>
  <div class="cyd-header">
     <svg class="cyd-logo-img" viewBox="0 0 437.2 317.9" xmlns="http://www.w3.org/2000/svg">
       <style>
@@ -247,6 +255,12 @@
         <option value="Concepción">Concepción</option>
       </select>
     </div>
+    <div class="mb-3">
+  <label for="filtroEstado" class="form-label text-white-50 small fw-bold">Estado</label>
+  <select id="filtroEstado" class="form-select form-select-sm" onchange="aplicarFiltros()">
+    <option value="TODOS">Todos los Estados</option>
+  </select>
+</div>
 
     <button class="btn btn-sm btn-outline-light w-100" onclick="limpiarFiltros()">
       <i class="bi bi-arrow-counterclockwise"></i> Limpiar Filtros
@@ -303,28 +317,42 @@
     </div>
   </div>
 
-  <!-- FILA 2: TABLA DE ESTADOS POR CENTRO -->
-  <div class="row g-3 mb-3">
-    <div class="col-12">
-      <div class="card-panel">
-        <h6 class="fw-bold mb-2">Cantidad de Solicitudes por Estado y Centro</h6>
-        <div class="table-responsive">
-          <table class="table table-bordered table-sm table-cyd align-middle m-0">
-            <thead>
-              <tr>
-                <th style="text-align: left;">Estado</th>
-                <th>Antofagasta</th>
-                <th>Santiago</th>
-                <th>Concepción</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody id="cuerpoTablaMatriz"></tbody>
-          </table>
-        </div>
+ <!-- FILA 2: TABLA Y GRÁFICO DE TENDENCIA HISTÓRICA -->
+<div class="row g-3 mb-3">
+  <!-- Columna Izquierda: Tabla Matriz -->
+  <div class="col-lg-6">
+    <div class="card-panel h-100">
+      <h6 class="fw-bold mb-2">Cantidad de Solicitudes por Estado y Centro</h6>
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm table-cyd align-middle m-0">
+          <thead>
+            <tr>
+              <th style="text-align: left;">Estado</th>
+              <th>Antofagasta</th>
+              <th>Santiago</th>
+              <th>Concepción</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpoTablaMatriz"></tbody>
+        </table>
       </div>
     </div>
   </div>
+
+  <!-- Columna Derecha: Gráfico Histórico -->
+  <div class="col-lg-6">
+    <div class="card-panel h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="fw-bold m-0">Evolución Histórica por Estado</h6>
+        <small class="text-muted" style="font-size: 0.75rem;">(Capturas semanales)</small>
+      </div>
+      <div style="position: relative; height: 260px; width: 100%;">
+        <canvas id="graficoHistorico"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
 
   <!-- FILA 3: TIEMPOS DE GESTIÓN SECUNDARIOS -->
   <div class="row g-3 mb-3">
@@ -409,9 +437,24 @@
 
     window.onload = () => {
       google.script.run
-        .withSuccessHandler(inicializar)
-        .withFailureHandler(err => console.error("Error backend:", err))
-        .getDataConsolidada();
+  .withSuccessHandler(function(res) {
+    if (res) {
+      rawSolicitudes = res.solicitudes || [];
+      rawItems = res.items || [];
+
+      // Poblar filtros y renderizar vistas
+      poblarDesplegableTipos();
+      aplicarFiltros();
+
+      // Ocultar la pantalla de carga con animación suave
+      let loader = document.getElementById('loaderOverlay');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 400);
+      }
+    }
+  })
+  .getDataConsolidada();
     };
 
     function inicializar(res) {
@@ -440,44 +483,105 @@
     }
 
     function poblarDesplegableTipos() {
-      let tiposUnicos = [...new Set(rawSolicitudes.map(s => s.tipo))].filter(Boolean).sort();
-      let select = document.getElementById('filtroTipo');
-      select.innerHTML = '<option value="TODOS" selected>Todos los Tipos</option>';
-      tiposUnicos.forEach(t => {
-        select.innerHTML += `<option value="${t}">${t}</option>`;
-      });
-    }
+  // 1. Cargar Tipos
+  let tiposUnicos = [...new Set(rawSolicitudes.map(s => s.tipo))].filter(Boolean).sort();
+  let selectTipo = document.getElementById('filtroTipo');
+  if (selectTipo) {
+    selectTipo.innerHTML = '<option value="TODOS" selected>Todos los Tipos</option>';
+    tiposUnicos.forEach(t => {
+      selectTipo.innerHTML += `<option value="${t}">${t}</option>`;
+    });
+  }
+
+  // 2. Cargar Centros
+  let centrosUnicos = [...new Set(rawSolicitudes.map(s => s.centro))].filter(Boolean).sort();
+  let selectCentro = document.getElementById('filtroCentro');
+  if (selectCentro) {
+    selectCentro.innerHTML = '<option value="TODOS" selected>Todos los Centros</option>';
+    centrosUnicos.forEach(c => {
+      selectCentro.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+  }
+
+  // 3. Cargar Estados con ORDEN PERSONALIZADO
+  const ordenDeseado = [
+    "Espera aprobación 1",
+    "Espera aprobación 2",
+    "Revisión stock Santiago",
+    "Revisión stock centro seleccionado",
+    "Cotización",
+    "Pendiente entrega proveedor",
+    "Preparar recurso",
+    "Listo para entregar",
+    "En traslado",
+    "Rechazada",
+    "Entregado"
+  ];
+
+  let estadosPresentes = [...new Set(rawSolicitudes.map(s => s.estado))].filter(Boolean);
+
+  // Ordenar según la posición en el arreglo 'ordenDeseado'
+  estadosPresentes.sort((a, b) => {
+    let indexA = ordenDeseado.indexOf(a);
+    let indexB = ordenDeseado.indexOf(b);
+
+    // Si algún estado no está en la lista de prioridad, se ubica al final
+    if (indexA === -1) indexA = 99;
+    if (indexB === -1) indexB = 99;
+
+    return indexA - indexB;
+  });
+
+  let selectEstado = document.getElementById('filtroEstado');
+  if (selectEstado) {
+    selectEstado.innerHTML = '<option value="TODOS" selected>Todos los Estados</option>';
+    estadosPresentes.forEach(e => {
+      selectEstado.innerHTML += `<option value="${e}">${e}</option>`;
+    });
+  }
+}
 
     function aplicarFiltros() {
-      const valDesde = document.getElementById('filtroDesde').value;
-      const valHasta = document.getElementById('filtroHasta').value;
+  const valDesde = document.getElementById('filtroDesde').value;
+  const valHasta = document.getElementById('filtroHasta').value;
 
-      const fDesde = valDesde ? new Date(valDesde + 'T00:00:00').getTime() : null;
-      const fHasta = valHasta ? new Date(valHasta + 'T23:59:59').getTime() : null;
-      
-      const selectTipo = document.getElementById('filtroTipo');
-      const tiposSeleccionados = Array.from(selectTipo.selectedOptions).map(opt => opt.value);
-      const fCentro = document.getElementById('filtroCentro').value;
+  const fDesde = valDesde ? new Date(valDesde + 'T00:00:00').getTime() : null;
+  const fHasta = valHasta ? new Date(valHasta + 'T23:59:59').getTime() : null;
+  
+  const selectTipo = document.getElementById('filtroTipo');
+  const tiposSeleccionados = Array.from(selectTipo.selectedOptions).map(opt => opt.value);
+  const fCentro = document.getElementById('filtroCentro').value;
+  
+  // 1. Obtener la opción seleccionada en el filtro de Estado
+  const elEstado = document.getElementById('filtroEstado');
+  const fEstado = elEstado ? elEstado.value : 'TODOS';
 
-      let solFiltradas = rawSolicitudes.filter(s => {
-        let fechaParaFiltro = s.fechaAprob || s.fechaSol;
+  // 2. Filtrar solicitudes evaluando todas las condiciones
+  let solFiltradas = rawSolicitudes.filter(s => {
+    let fechaParaFiltro = s.fechaAprob || s.fechaSol;
 
-        let cumDesde = !fDesde || (fechaParaFiltro && fechaParaFiltro >= fDesde);
-        let cumHasta = !fHasta || (fechaParaFiltro && fechaParaFiltro <= fHasta);
-        let cumTipo = tiposSeleccionados.includes('TODOS') || tiposSeleccionados.length === 0 || tiposSeleccionados.includes(s.tipo);
-        let cumCentro = fCentro === 'TODOS' || s.centro === fCentro;
+    let cumDesde = !fDesde || (fechaParaFiltro && fechaParaFiltro >= fDesde);
+    let cumHasta = !fHasta || (fechaParaFiltro && fechaParaFiltro <= fHasta);
+    let cumTipo = tiposSeleccionados.includes('TODOS') || tiposSeleccionados.length === 0 || tiposSeleccionados.includes(s.tipo);
+    let cumCentro = fCentro === 'TODOS' || s.centro === fCentro;
+    
+    // Nueva validación para comparar directamente contra s.estado
+    let cumEstado = fEstado === 'TODOS' || (s.estado && s.estado.trim() === fEstado.trim());
 
-        return cumDesde && cumHasta && cumTipo && cumCentro;
-      });
+    return cumDesde && cumHasta && cumTipo && cumCentro && cumEstado;
+  });
 
-      let idsSolFiltradas = new Set(solFiltradas.map(s => s.id));
-      let itemsFiltrados = rawItems.filter(i => idsSolFiltradas.has(i.idSolicitud));
+  let idsSolFiltradas = new Set(solFiltradas.map(s => s.id));
+  let itemsFiltrados = rawItems.filter(i => idsSolFiltradas.has(i.idSolicitud));
 
-      renderKPIsSuperiores(solFiltradas);
-      renderTablaMatriz(solFiltradas);
-      renderKPIsTiempos(solFiltradas, itemsFiltrados);
-      renderTop10(solFiltradas);
-    }
+  // 3. Renderizar las vistas del Dashboard
+  renderKPIsSuperiores(solFiltradas);
+  renderTablaMatriz(solFiltradas);
+  renderKPIsTiempos(solFiltradas, itemsFiltrados);
+  renderTop10(solFiltradas);
+  / Actualizar tambiEn la curva histOrica al aplicar cualquier filtro
+  actualizarGraficoHistorico();
+}
 
     function renderKPIsSuperiores(solicitudes) {
       const ahora = new Date().getTime();
@@ -625,17 +729,96 @@
 }
 
     function limpiarFiltros() {
-      document.getElementById('filtroDesde').value = '';
-      document.getElementById('filtroHasta').value = '';
-      
-      const selectTipo = document.getElementById('filtroTipo');
-      Array.from(selectTipo.options).forEach(opt => {
-        opt.selected = (opt.value === 'TODOS');
-      });
+  document.getElementById('fechaDesde').value = '';
+  document.getElementById('fechaHasta').value = '';
+  document.getElementById('filtroTipo').value = 'TODOS';
+  document.getElementById('filtroCentro').value = 'TODOS';
+  document.getElementById('filtroEstado').value = 'TODOS'; // Nuevo
+  aplicarFiltros();
+}
+let miGraficoHistorico = null;
+let rawHistorico = [];
 
-      document.getElementById('filtroCentro').value = 'TODOS';
-      aplicarFiltros();
+// 1. Solicitar datos históricos al iniciar la aplicación
+google.script.run
+  .withSuccessHandler(function(data) {
+    rawHistorico = data || [];
+    actualizarGraficoHistorico();
+  })
+  .getDatosHistoricos();
+
+// 2. Función que procesa y dibuja las líneas curvas
+function actualizarGraficoHistorico() {
+  let canvas = document.getElementById('graficoHistorico');
+  if (!canvas || !rawHistorico || rawHistorico.length === 0) return;
+
+  // Obtener los valores seleccionados en tus filtros laterales
+  let fCentro = document.getElementById('filtroCentro') ? document.getElementById('filtroCentro').value : 'TODOS';
+  let fEstado = document.getElementById('filtroEstado') ? document.getElementById('filtroEstado').value : 'TODOS';
+  let selectTipo = document.getElementById('filtroTipo');
+  let tiposSeleccionados = selectTipo ? Array.from(selectTipo.selectedOptions).map(opt => opt.value) : ['TODOS'];
+
+  // Filtrar base de datos histórica
+  let historicoFiltrado = rawHistorico.filter(h => {
+    let cumCentro = fCentro === 'TODOS' || h.centro === fCentro;
+    let cumEstado = fEstado === 'TODOS' || h.estado === fEstado;
+    let cumTipo = tiposSeleccionados.includes('TODOS') || tiposSeleccionados.length === 0 || tiposSeleccionados.includes(h.tipo);
+    return cumCentro && cumEstado && cumTipo;
+  });
+
+  // Eje X: Obtener las fechas de captura únicas
+  let fechasX = [...new Set(rawHistorico.map(h => h.fecha))];
+
+  // Paleta de colores idéntica a tu diseño
+  const paletaColores = {
+    "Cotización": "#3b82f6",
+    "Revisión stock Santiago": "#ef4444",
+    "Pendiente entrega proveedor": "#eab308",
+    "Preparar recurso": "#22c55e",
+    "En traslado": "#f97316",
+    "Espera aprobación 1": "#8b5cf6",
+    "Espera aprobación 2": "#ec4899"
+  };
+
+  let estadosAGraficar = fEstado !== 'TODOS' ? [fEstado] : Object.keys(paletaColores);
+
+  // Mapear los puntos por cada serie
+  let datasets = estadosAGraficar.map(estado => {
+    let dataPuntos = fechasX.map(fecha => {
+      return historicoFiltrado.filter(h => h.fecha === fecha && h.estado === estado).length;
+    });
+
+    return {
+      label: estado,
+      data: dataPuntos,
+      borderColor: paletaColores[estado] || "#64748b",
+      backgroundColor: paletaColores[estado] || "#64748b",
+      tension: 0.4, // Curvatura suave de líneas
+      borderWidth: 2,
+      pointRadius: 2
+    };
+  });
+
+  // Renderizar o actualizar con Chart.js
+  let ctx = canvas.getContext('2d');
+  if (miGraficoHistorico) miGraficoHistorico.destroy();
+
+  miGraficoHistorico = new Chart(ctx, {
+    type: 'line',
+    data: { labels: fechasX, datasets: datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } }
+      },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+        x: { grid: { display: false } }
+      }
     }
+  });
+}
   </script>
 </body>
 </html>

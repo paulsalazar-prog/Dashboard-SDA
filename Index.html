@@ -436,7 +436,8 @@
     ];
 
    // Carga inicial segura con deshabilitación garantizada del Loader
-document.addEventListener('DOMContentLoaded', function() {
+window.onload = () => {
+  // 1. Carga segura de datos principales
   google.script.run
     .withSuccessHandler(function(res) {
       try {
@@ -444,25 +445,27 @@ document.addEventListener('DOMContentLoaded', function() {
           rawSolicitudes = res.solicitudes || [];
           rawItems = res.items || [];
 
-          poblarDesplegableTipos();
-          aplicarFiltros();
+          // Ejecutar filtros solo si existen datos válidos
+          if (typeof aplicarFiltros === 'function') {
+            aplicarFiltros();
+          }
         }
       } catch (err) {
-        console.error("Error procesando datos principales:", err);
+        console.error("Error procesando solicitudes/ítems:", err);
       } finally {
-        // Garantizar que la pantalla de carga SE QUITE independientemente de lo que pase
+        // Garantiza SIEMPRE que el loader desaparezca
         ocultarLoader();
       }
     })
     .withFailureHandler(function(err) {
-      console.error("Error recuperando datos del servidor:", err);
+      console.error("Error de conexión con el backend:", err);
       ocultarLoader();
     })
     .getDataConsolidada();
 
-  // Cargar histórico de forma asíncrona e independiente
+  // 2. Carga asíncrona del histórico sin bloquear la pantalla
   cargarHistoricoAsync();
-});
+};
 
 function ocultarLoader() {
   let loader = document.getElementById('loaderOverlay');
@@ -476,10 +479,12 @@ function cargarHistoricoAsync() {
   google.script.run
     .withSuccessHandler(function(data) {
       rawHistorico = data || [];
-      actualizarGraficoHistorico();
+      if (typeof actualizarGraficoHistorico === 'function') {
+        actualizarGraficoHistorico();
+      }
     })
     .withFailureHandler(function(err) {
-      console.warn("No se pudo cargar el histórico:", err);
+      console.warn("Historico vacio o fallo al cargar:", err);
     })
     .getDatosHistoricos();
 }

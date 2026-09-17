@@ -435,27 +435,54 @@
       "En traslado"
     ];
 
-    window.onload = () => {
-      google.script.run
-  .withSuccessHandler(function(res) {
-    if (res) {
-      rawSolicitudes = res.solicitudes || [];
-      rawItems = res.items || [];
+   // Carga inicial segura con deshabilitación garantizada del Loader
+document.addEventListener('DOMContentLoaded', function() {
+  google.script.run
+    .withSuccessHandler(function(res) {
+      try {
+        if (res) {
+          rawSolicitudes = res.solicitudes || [];
+          rawItems = res.items || [];
 
-      // Poblar filtros y renderizar vistas
-      poblarDesplegableTipos();
-      aplicarFiltros();
-
-      // Ocultar la pantalla de carga con animación suave
-      let loader = document.getElementById('loaderOverlay');
-      if (loader) {
-        loader.style.opacity = '0';
-        setTimeout(() => loader.style.display = 'none', 400);
+          poblarDesplegableTipos();
+          aplicarFiltros();
+        }
+      } catch (err) {
+        console.error("Error procesando datos principales:", err);
+      } finally {
+        // Garantizar que la pantalla de carga SE QUITE independientemente de lo que pase
+        ocultarLoader();
       }
-    }
-  })
-  .getDataConsolidada();
-    };
+    })
+    .withFailureHandler(function(err) {
+      console.error("Error recuperando datos del servidor:", err);
+      ocultarLoader();
+    })
+    .getDataConsolidada();
+
+  // Cargar histórico de forma asíncrona e independiente
+  cargarHistoricoAsync();
+});
+
+function ocultarLoader() {
+  let loader = document.getElementById('loaderOverlay');
+  if (loader) {
+    loader.style.opacity = '0';
+    setTimeout(() => { loader.style.display = 'none'; }, 400);
+  }
+}
+
+function cargarHistoricoAsync() {
+  google.script.run
+    .withSuccessHandler(function(data) {
+      rawHistorico = data || [];
+      actualizarGraficoHistorico();
+    })
+    .withFailureHandler(function(err) {
+      console.warn("No se pudo cargar el histórico:", err);
+    })
+    .getDatosHistoricos();
+}
 
     function inicializar(res) {
       rawSolicitudes = res.solicitudes || [];
